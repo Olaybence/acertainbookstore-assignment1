@@ -478,9 +478,20 @@ public class BookStoreTest {
 
 		storeManager.addBooks(booksToAdd);
 		
+		List<StockBook> booksInStorePreTest = storeManager.getBooks();
+		
 		// Get books with that ISBN.
 		int numBooks = 2;
-		List<Book> topBooks = client.getTopRatedBooks(numBooks);
+		try {			
+			client.getTopRatedBooks(numBooks);
+			fail();
+		} catch(BookStoreException e) {
+			;
+		}
+		
+		List<StockBook> booksInStorePostTest = storeManager.getBooks();
+		assertTrue(booksInStorePreTest.containsAll(booksInStorePostTest)
+				&& booksInStorePreTest.size() == booksInStorePostTest.size());
 	}
 	
 	/**
@@ -509,13 +520,13 @@ public class BookStoreTest {
 		
 		// Try to buy a book with invalid ISBN.
 		HashSet<BookCopy> booksToBuy = new HashSet<BookCopy>();
-		booksToBuy.add(new BookCopy(TEST_ISBN + 1, -1)); // invalid
+		booksToBuy.add(new BookCopy(TEST_ISBN + 1, 1000));
 		booksToBuy.add(new BookCopy(TEST_ISBN + 2, 2)); 
-		booksToBuy.add(new BookCopy(TEST_ISBN + 3, 10));
+		booksToBuy.add(new BookCopy(TEST_ISBN + 3, 1000));
 
 		// Try to buy the books.
 		try {
-			client.getTopRatedBooks(3);
+			client.buyBooks(booksToBuy);
 			fail();
 		} catch (BookStoreException ex) {
 			;
@@ -529,9 +540,6 @@ public class BookStoreTest {
 		demanded.add(new ImmutableStockBook(TEST_ISBN + 3, "ava for Absolute Beginners",
 				"Iuliana Cosmina", (float) 50, NUM_COPIES, 0, 0, 0, false));
 		
-		System.out.println("testGetBooksInDemand");
-		System.out.println(booksInDemand.size());
-		System.out.println(demanded.size());
 		// Check pre and post state are same.
 		assertTrue(booksInDemand.containsAll(demanded)
 				&& booksInDemand.size() == demanded.size());
@@ -567,21 +575,12 @@ public class BookStoreTest {
 		booksToBuy.add(new BookCopy(TEST_ISBN + 2, 2));
 		booksToBuy.add(new BookCopy(TEST_ISBN + 3, 1));
 
-		// Try to buy the books.
-		try {
-			client.buyBooks(booksToBuy);
-			fail();
-		} catch (BookStoreException ex) {
-			;
-		}
+		client.buyBooks(booksToBuy);
 
 		List<StockBook> booksInDemand = storeManager.getBooksInDemand();
-
-		List<StockBook> demanded = new ArrayList<StockBook>();
 		
 		// Check pre and post state are same.
-		assertTrue(booksInDemand.containsAll(demanded)
-				&& booksInDemand.size() == demanded.size());
+		assertTrue(booksInDemand.isEmpty());
 	}
 	
 	/**
