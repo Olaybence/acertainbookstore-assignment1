@@ -323,7 +323,7 @@ public class CertainBookStore implements BookStore, StockManager {
 	@Override
 	public synchronized List<Book> getTopRatedBooks(int numBooks) throws BookStoreException {
 		// Check the number is positive
-		if (numBooks <= 0) {
+		if (numBooks < 0) {
 			throw new BookStoreException(BookStoreConstants.BOOK_NUM_PARAM + " " + numBooks + BookStoreConstants.INVALID + ": negative count");
 		}
 		if (numBooks > this.bookMap.size()) {

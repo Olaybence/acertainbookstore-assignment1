@@ -394,6 +394,76 @@ public class BookStoreTest {
 	}
 	
 	/**
+	 * Helper method to add some books.
+	 *
+	 * @param isbn
+	 *            the isbn
+	 * @param copies
+	 *            the copies
+	 * @throws BookStoreException
+	 *             the book store exception
+	 */
+	@Test
+	public void rateBooksInvalid() throws BookStoreException {
+		Set<StockBook> booksToAdd = new HashSet<StockBook>();
+
+		// Add books to store
+		booksToAdd.add(new ImmutableStockBook(TEST_ISBN + 1, "The Art of Computer Programming", 
+				"Donald Knuth", (float) 300, NUM_COPIES, 0, 0, 0, false));
+		
+		booksToAdd.add(new ImmutableStockBook(TEST_ISBN + 2, "The C Programming Language",
+				"Dennis Ritchie and Brian Kerninghan", (float) 50, NUM_COPIES, 0, 0, 0, false));
+		
+		booksToAdd.add(new ImmutableStockBook(TEST_ISBN + 3, "ava for Absolute Beginners",
+				"Iuliana Cosmina", (float) 50, NUM_COPIES, 0, 0, 0, false));
+		
+		booksToAdd.add(new ImmutableStockBook(TEST_ISBN + 4, "Expert Python Programming",
+				"Tarek Ziade and Michal Jaworski", (float) 50, NUM_COPIES, 0, 0, 0, false));
+		storeManager.addBooks(booksToAdd);
+		
+		List<StockBook> booksInStorePreTest = storeManager.getBooks();
+		
+		// Rating > 5
+		HashSet<BookRating> bookRating = new HashSet<BookRating>();
+		bookRating.add(new BookRating(TEST_ISBN + 1, 42) );
+		bookRating.add(new BookRating(TEST_ISBN + 2, 69) );
+		bookRating.add(new BookRating(TEST_ISBN + 3, 200) );
+
+		try {
+			client.rateBooks(bookRating);
+			fail();
+		} catch(BookStoreException e) {
+			;
+		}
+		
+		List<StockBook> booksInStoreMidTest = storeManager.getBooks();
+		// Pre == Mid
+		assertTrue(booksInStorePreTest.containsAll(booksInStoreMidTest)
+				&& booksInStorePreTest.size() == booksInStoreMidTest.size());
+		
+		// Rating < 0
+		bookRating = new HashSet<BookRating>();
+		bookRating.add(new BookRating(TEST_ISBN + 1, -5) );
+		bookRating.add(new BookRating(TEST_ISBN + 2, 10) );
+		
+		try {
+			client.rateBooks(bookRating);
+			fail();
+		} catch(BookStoreException e) {
+			;
+		}
+		
+		List<StockBook> booksInStorePostTest = storeManager.getBooks();
+		
+		// Pre == Post
+		assertTrue(booksInStorePreTest.containsAll(booksInStorePostTest)
+				&& booksInStorePreTest.size() == booksInStorePostTest.size());
+		// Mid == Post
+		assertTrue(booksInStoreMidTest.containsAll(booksInStorePostTest)
+				&& booksInStoreMidTest.size() == booksInStorePostTest.size());
+	}
+	
+	/**
 	 * Tests that a list of books with a certain feature can be retrieved.
 	 *
 	 * @throws BookStoreException
@@ -434,11 +504,11 @@ public class BookStoreTest {
 		bookRating.add(new BookRating(TEST_ISBN + 1, 5) );
 		client.rateBooks(bookRating);
 		
-		
+		List<Book> topBooksEmpty = client.getTopRatedBooks(0);
+		assertTrue(topBooksEmpty.isEmpty());
 		
 		// Get books with that ISBN.
-		int numBooks = 3;
-		List<Book> topBooks = client.getTopRatedBooks(numBooks);
+		List<Book> topBooks = client.getTopRatedBooks(3);
 		
 		// Create the supposed list of books
 		List<StockBook> topRateds = new ArrayList<StockBook>();
@@ -482,6 +552,45 @@ public class BookStoreTest {
 		
 		// Get books with that ISBN.
 		int numBooks = 2;
+		try {			
+			client.getTopRatedBooks(numBooks);
+			fail();
+		} catch(BookStoreException e) {
+			;
+		}
+		
+		List<StockBook> booksInStorePostTest = storeManager.getBooks();
+		assertTrue(booksInStorePreTest.containsAll(booksInStorePostTest)
+				&& booksInStorePreTest.size() == booksInStorePostTest.size());
+	}
+	
+	/**
+	 * Test what getTopRated(20) gives back if there is not enough books.
+	 *
+	 * @throws BookStoreException
+	 *             the book store exception
+	 */
+	@Test
+	public void testGetTopRatedMore() throws BookStoreException {
+		Set<StockBook> booksToAdd = new HashSet<StockBook>();
+		booksToAdd.add(new ImmutableStockBook(TEST_ISBN + 1, "The Art of Computer Programming", 
+				"Donald Knuth", (float) 300, NUM_COPIES, 0, 0, 0, false));
+		
+		booksToAdd.add(new ImmutableStockBook(TEST_ISBN + 2, "The C Programming Language",
+				"Dennis Ritchie and Brian Kerninghan", (float) 50, NUM_COPIES, 0, 0, 0, false));
+		
+		booksToAdd.add(new ImmutableStockBook(TEST_ISBN + 3, "ava for Absolute Beginners",
+				"Iuliana Cosmina", (float) 50, NUM_COPIES, 0, 0, 0, false));
+		
+		booksToAdd.add(new ImmutableStockBook(TEST_ISBN + 4, "Expert Python Programming",
+				"Tarek Ziade and Michal Jaworski", (float) 50, NUM_COPIES, 0, 0, 0, false));
+
+		storeManager.addBooks(booksToAdd);
+		
+		List<StockBook> booksInStorePreTest = storeManager.getBooks();
+		
+		// Get books with that ISBN.
+		int numBooks = 20;
 		try {			
 			client.getTopRatedBooks(numBooks);
 			fail();
